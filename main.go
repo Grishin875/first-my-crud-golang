@@ -88,7 +88,7 @@ func putTask(c *gin.Context) {
 
 // get tasks
 func getTasks(c *gin.Context) {
-	status := c.DefaultQuery("status", "") // Получаем параметр status (если есть)
+	status := c.DefaultQuery("status", "") 
 
 	var filteredTasks []Task
 	for _, task := range sliceTask {
