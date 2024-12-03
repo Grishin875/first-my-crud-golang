@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Management</title>
+    <script>
+        const apiUrl = 'http://localhost:8080/tasks';
+
+        // Fetch tasks
+        async function fetchTasks(status = '') {
+            let url = apiUrl;
+            if (status) {
+                url = `${url}?status=${status}`;
+            }
+            const response = await fetch(url);
+            const data = await response.json();
+            const tasksList = document.getElementById('tasks-list');
+            tasksList.innerHTML = '';  // Clear previous tasks
+
+            if (data.tasks) {
+                data.tasks.forEach(task => {
+                    const li = document.createElement('li');
+                    li.textContent = `ID: ${task.id}, Title: ${task.title}, Status: ${task.status}`;
+                    tasksList.appendChild(li);
+
+                    // Add delete button
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.textContent = 'Delete';
+                    deleteBtn.onclick = () => deleteTask(task.id);
+                    li.appendChild(deleteBtn);
+
+                    // Add update button
+                    const updateBtn = document.createElement('button');
+                    updateBtn.textContent = 'Update Status';
+                    updateBtn.onclick = () => updateTask(task.id);
+                    li.appendChild(updateBtn);
+                });
+            } else {
+                tasksList.innerHTML = 'No tasks found.';
+            }
+        }
+
+        // Create a new task
+        async function createTask() {
+            const title = document.getElementById('title').value;
+            const description = document.getElementById('description').value;
+            const status = document.getElementById('status').value;
+
+            const task = {
+                title: title,
+                description: description,
+                status: status
+            };
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(task)
+            });
+
+            const data = await response.json();
+            alert(data.message);
+            fetchTasks();  // Reload tasks after creation
+        }
+
+        // Delete a task
+        async function deleteTask(id) {
+            const response = await fetch(`${apiUrl}/${id}`, {
+                method: 'DELETE'
+            });
+
+            const data = await response.json();
+            alert(data.message);
+            fetchTasks();  // Reload tasks after deletion
+        }
+
+        // Update a task status
+        async function updateTask(id) {
+            const newStatus = prompt('Enter new status (e.g., completed, in-progress):');
+            if (newStatus) {
+                const task = {
+                    status: newStatus
+                };
+
+                const response = await fetch(`${apiUrl}/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(task)
+                });
+
+                const data = await response.json();
+                alert(data.message);
+                fetchTasks();  // Reload tasks after update
+            }
+        }
+
+        // On page load, fetch tasks
+        window.onload = function() {
+            fetchTasks();  // Fetch all tasks on load
+        };
+    </script>
+</head>
+<body>
+    <h1>Task Management</h1>
+
+    <h2>Create a New Task</h2>
+    <form onsubmit="event.preventDefault(); createTask();">
+        <label for="title">Title:</label>
+        <input type="text" id="title" required><br><br>
+
+        <label for="description">Description:</label>
+        <input type="text" id="description" required><br><br>
+
+        <label for="status">Status:</label>
+        <select id="status">
+            <option value="in-progress">In Progress</option>
+            <option value="completed">Completed</option>
+            <option value="pending">Pending</option>
+        </select><br><br>
+
+        <button type="submit">Create Task</button>
+    </form>
+
+    <h2>Tasks List</h2>
+    <ul id="tasks-list"></ul>
+</body>
+</html>
